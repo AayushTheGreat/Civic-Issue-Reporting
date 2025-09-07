@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Admin Dashboard - Civic Issues</title>
+</head>
+
+<body>
+    <h1>Civic Issue Reports</h1>
+    <table border="1" cellpadding="10">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>User</th>
+                <th>Description</th>
+                <th>Location</th>
+                <th>Photo</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody id="reportTable"></tbody>
+    </table>
+
+    <script>
+        async function loadReports() {
+            const res = await fetch("http://localhost:8000/reports");
+            const reports = await res.json();
+
+            const tbody = document.getElementById("reportTable");
+            tbody.innerHTML = "";
+
+            reports.forEach(r => {
+                const row = document.createElement("tr");
+
+                row.innerHTML = `
+          <td>${r.id}</td>
+          <td>${r.user_name}</td>
+          <td>${r.description}</td>
+          <td>${r.location}</td>
+          <td>${r.photo_path ? `<img src="http://localhost:8000/${r.photo_path}" width="100">` : "No photo"}</td>
+          <td>
+            <select onchange="updateStatus(${r.id}, this.value)">
+              <option value="Pending" ${r.status === "Pending" ? "selected" : ""}>Pending</option>
+              <option value="In Progress" ${r.status === "In Progress" ? "selected" : ""}>In Progress</option>
+              <option value="Resolved" ${r.status === "Resolved" ? "selected" : ""}>Resolved</option>
+            </select>
+          </td>
+        `;
+
+                tbody.appendChild(row);
+            });
+        }
+
+        async function updateStatus(id, newStatus) {
+            await fetch(`http://localhost:8000/report/${id}/status`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ status: newStatus })
+            });
+            loadReports(); // refresh table
+        }
+
+        loadReports();
+    </script>
+</body>
+
+</html>
